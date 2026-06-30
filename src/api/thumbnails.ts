@@ -6,6 +6,7 @@ import type { BunRequest } from "bun";
 import { BadRequestError, NotFoundError, UserForbiddenError } from "./errors";
 
 const path = require('node:path');
+const crypto = require('crypto');
 
 type Thumbnail = {
   data: ArrayBuffer;
@@ -74,10 +75,12 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   const buffer = Buffer.from(arrayBuffer)
   const base64ImageString = buffer.toString("base64")
   videoThumbnails.set( videoId, videoThumbnail)
-  const URL = `http://localhost:${cfg.port}/assets/${videoId}.${fileExtension}`
   console.log(fileExtension)
   const dataURL = `data:thumbnail;base64,${base64ImageString}`
-  const filePath = path.join(cfg.assetsRoot,`/assets/${videoId}.${fileExtension}`)
+  const fileNameBuf = crypto.randomBytes(32).toString("base64url")
+  console.log(fileNameBuf)
+  const filePath = path.join(cfg.assetsRoot, `${fileNameBuf}.${fileExtension}`)
+  const URL = `http://localhost:${cfg.port}/assets/${fileNameBuf}.${fileExtension}`
   videoMetaData.thumbnailURL = URL
   updateVideo(cfg.db, videoMetaData)
   Bun.write(filePath, file)
